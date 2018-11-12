@@ -2,8 +2,9 @@
 
 ### Custom Metrics Manager for Google Sheets
 
-Original idea from (Simo Ahava)[https://github.com/sahava/ga-custom-dimension-manager]
+This script is original idea based from (Simo Ahava)[https://github.com/sahava/ga-custom-dimension-manager]
 
+#### Tasks
 Open new spreadsheet from Google Drive and create a new GApps.
 In the same folder create main Code **Code.gs** and various html pages (scripts, css and html).
 

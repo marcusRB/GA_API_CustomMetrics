@@ -1,0 +1,114 @@
+<script>
+  (function() {
+    var limit = data.limit;
+    var accountId = data.accountId;
+    var propertyId = data.propertyId;
+    var current = document.querySelector('#current');
+    var oldName = document.querySelector('#oldName');
+    var newName = document.querySelector('#newName');
+    var oldScope = document.querySelector('#oldScope');
+    var newScope = document.querySelector('#newScope');
+    var oldActive = document.querySelector('#oldActive');
+    var newActive = document.querySelector('#newActive');
+    var oldType = document.querySelector('#oldType');
+    var newType = document.querySelector('#newType');
+    var update = document.querySelector('#update');
+    var skip = document.querySelector('#skip');
+    var close = document.querySelector('#close');
+    var warning = document.querySelector('#warning');
+    var metrics = data.metrics;
+    var sourceData = data.sourceData;
+    var i, newI, oMet, nMet;
+    
+    var disableButtons = function() {
+      update.setAttribute('disabled', '');
+      skip.setAttribute('disabled', '');
+    };
+    
+    var enableButtons = function() {
+      update.removeAttribute('disabled');
+      skip.removeAttribute('disabled');
+    };
+    
+    var showError = function(e) {
+      warning.className = 'block error';
+      warning.innerHTML = e.message;
+      close.innerHTML = 'Close';
+    };
+    
+    var isSame = function(oMet, nMet) {
+      return oMet.name === nMet.name &&
+             oMet.scope === nMet.scope &&
+             oMet.type === nMet.type &&
+             oMet.active.toString() === nMet.active.toString();
+             
+    };
+    
+    var run = function(i) {
+      var updateMetric, skipMetric, checkClose;
+      oMet = metrics.items[i];
+      nMet = sourceData[i];
+      newI = i + 1;
+      current.setAttribute('data-value', newI);
+      current.innerHTML = newI;
+      oldName.innerHTML = oMet && oMet.name || '-';
+      oldScope.innerHTML = oMet && oMet.scope || '-';
+      oldType.innerHTM = oMet && oMet.type || '-';
+      oldActive.innerHTML = oMet && (oMet.active || oMet.active === false) ? oMet.active : '-';
+      newName.innerHTML = nMet.name;
+      newScope.innerHTML = nMet.scope;
+      newType.innerHTM = nMet.type;
+      newActive.innerHTML = nMet.active;
+      
+      
+      checkClose = function() {
+        if (newI < limit) { 
+          run(newI); 
+        } else {
+          close.innerHTML = 'Close';
+          warning.className = 'block';
+          warning.innerHTML = 'All done! You can close this dialog now.';
+        }     
+      };
+      
+      updateMetric = function() {
+        update.removeEventListener('click', updateMetric);
+        skip.removeEventListener('click', skipMetric);
+        disableButtons();
+        warning.className = 'block';
+        warning.innerHTML = 'Updating metric...';
+        google.script.run.withFailureHandler(showError).withSuccessHandler(checkClose).updateMetric('update', accountId, propertyId, newI, nMet);
+      };
+      
+      skipMetric = function() {
+        update.removeEventListener('click', updateMetric);
+        skip.removeEventListener('click', skipMetric);
+        disableButtons();
+        checkClose();
+      };
+      
+      if (oMet && isSame(oMet, nMet)) {
+        warning.className = 'block';
+        warning.innerHTML = 'Skipping metric...';
+        window.setTimeout(skipMetric, 100);
+      } else if (oMet) {
+        enableButtons();
+        warning.className = 'block error';
+        warning.innerHTML = 'metric already populated. UPDATE to get value from sheet, or SKIP to keep original value.';
+        update.addEventListener('click', updateMetric);
+        skip.addEventListener('click', skipMetric);
+      } else {
+        warning.innerHTML = 'Creating metric...';
+        warning.className = 'block';
+        disableButtons();
+        google.script.run.withFailureHandler(showError).withSuccessHandler(checkClose).updateMetric('create', accountId, propertyId, newI, nMet);
+      }
+    };
+    
+    run(0);
+      
+    close.addEventListener('click', function() {
+      google.script.host.close();
+    });
+  })();
+</script>
